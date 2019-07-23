@@ -3,6 +3,7 @@ package srtm
 import	(
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -49,8 +50,6 @@ func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
         srtm.Dir = demdir
 
         srtm.getSrtmFileName(lat, lon)
-
-	fmt.Println(srtm.Path)
 
         err := srtm.getSquareSize()
 	if err != nil {
@@ -126,8 +125,16 @@ func (self *SrtmTile) getSquareSize() error {
 // getRowAndColumn calculates the lookup []byte in the grid
 // NOTE: row and column are int, therefore become FLOOR rounded values
 func (self *SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
-	row := int((float64(self.Latitude) + 1.0 - lat) * (float64(self.SquareSize - 1.0)))
-	column := int((lon - float64(self.Longitude)) * (float64(self.SquareSize - 1.0)))
+	var row,column int
+
+	row = int((float64(self.Latitude) + 1.0 - math.Abs(lat)) * (float64(self.SquareSize - 1.0)))
+
+	if lon >= 0 {
+		column = int((lon - float64(self.Longitude)) * (float64(self.SquareSize - 1.0)))
+	} else {
+		column = int((float64(self.Longitude) - math.Abs(lon)) * (float64(self.SquareSize - 1.0)))
+	}
+
 	return row, column
 }
 
@@ -147,16 +154,20 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	}
 
 	// get the results from the byte location
-	result1, err := f.Seek(byte1, 0)
-	result2, err := f.Seek(byte2, 0)
+	_, _ = f.Seek(byte1, 0)
+	bytes := make([]byte,2)
+	response, _ := io.ReadAtLeast(f,bytes,2)
+	result := bytes[:response]
 
 	// do some magic
 	// github.com/tkrajina/go-elevations/blob/master/geoelevations/srtm.go
-	final := int(result1)*256 + int(result2)
+	final := int(result[0])*256 + int(result[1])
 
 	if final > 9000 {
 		return math.NaN(), err
 	}
+
+	f.Close()
 
 	return float64(final), nil
 }
