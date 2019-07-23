@@ -50,6 +50,8 @@ func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
 
         srtm.getSrtmFileName(lat, lon)
 
+	fmt.Println(srtm.Path)
+
         err := srtm.getSquareSize()
 	if err != nil {
 		return srtm, err
