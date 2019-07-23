@@ -26,13 +26,13 @@ type SrtmTile struct {
 func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
         srtm, err := getSrtm(demdir, lat, lon)
 	if err != nil {
-                return 0, err
+                return math.NaN(), err
         }
 
 
 	elevation, err := srtm.getElevationFromSrtm(lat, lon)
 	if err != nil {
-                return 0, err
+                return elevation, err
         }
 
         return elevation, nil
@@ -66,7 +66,7 @@ func (self *SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 
         elevation, err := self.getElevationFromRowAndColumn(row, column)
         if err != nil {
-                return 0, err
+                return elevation, err
         }
 
         return elevation, nil
