@@ -1,24 +1,28 @@
 # SRTM: Elevation Utilities
 This package contains several utilities that take a lat / lon value and returns the associated elevation *in meters_* anywhere in the world.
 
-**SRTM** is designed specifically as an interface between local SRTM data and a lat/lon query, reducing the need to rely on shelling out to some other software (eg. shelling a call to a gdal utility `gdallocationinfo -valonly /path/to/dem.vrt -geoloc lat lon`).
+Most of these functions are designed specifically as an interface between SRTM data and a lat/lon query, reducing the need to rely on some other non-golang software (eg. shelling a call to gdal with `gdallocationinfo -valonly /path/to/dem.vrt -geoloc lat lon`).
 
-The primary use of this utility is to provide a fast service for making multiple repeat elevation queries at scale, eg. finding elevation values for coordinates forming point/line/polygon geometries... or millions of them.
+Currently, the primary function is `srtm.ElevationFromLatLong`, which performs as you'd expect.  Future support for `srtm.ElevationFromWKT` and `srtm.ElevationFromBBOX` is forthcoming.
 
-An example use of this code is to first establish one or more srtms' details by calling `getSrtm` for each lat/lon int (a single srtm is good for about 20-30m squared), then fetching elevation for one/more series of coordinates.
+The primary use case for this utility is to provide a very fast service for making multiple repeat elevation queries at scale, eg. finding elevation values for coordinates forming point/line/polygon geometries... or millions of them.
 
-This code converts the lat lon to a byte value within the file, and seeks for just that byte value, therefore does not require loading an SRTM into memory for each request.
+An example use of this code is to first establish one or more SRTMs' details by calling `getSrtm` for a series of lat/lons that cover the area of investigation (a single 1-arc-second SRTM tile is good for about 20-30m square), then fetching elevation for *n* coordinates.
+
+In application, this code converts the lat lon to a byte lookup value within the file; and seeks for just that byte value; thus does not require loading any SRTM into memory.  This way the process is fast and lightweight.
 
 For more information on SRTM, please visit `https://wiki.openstreetmap.org/wiki/SRTM`.
 
-Currently, the author is hosting a worldwide set of srtm data on a private google storage bucket located at `gs://data.map.life/raw/dem`, which may be made available on a per-request basis.
+Currently, the author maintains a private worldwide set of SRTM data on a private google storage bucket.  This set may be made available on a per-inquiry basis.
 
 
 ### TBD
-If the srtm (hgt) file does not exist locally, build in a method to download it.  This would allow a client to maintain a limited set of srtm data, without downloading the entire world (~ 500 gb).
+If any given SRTM (.hgt) file does not exist locally, construct a method to fetch it.  This functionality would allow a user to maintain a limited set of SRTM data without downloading the entire world (~ 500 gb).
 
 
 ### Notes
-Several functions in the **SRTM** package is adapted from `https://github.com/tkrajina/go-elevations`, whose repo is designed as a standalone http client service that utilizes srtm data available online... useful for maintaining a small footprint but does not work at scale.
+1) Several functions in the **SRTM** package were adapted from `https://github.com/tkrajina/go-elevations`, whose repo is designed as a standalone http client service that utilizes SRTM data available online... reading and storing the SRTM tile into memory... useful for maintaining a small footprint but is not applicable for coordinate lookups worldwide @ scale.
 
-This package requires that 1-arc-second or 3-arc-second SRTM data are already available in a directory accessible by the code that relies on this library.  If the data is not present, the response will be an error of "srtm not available, please download" or similar.
+2) This package requires that 1-arc-second or 3-arc-second SRTM data are already available in a directory accessible by the code that calls this package.  If the data is not present, the response will be an error of "SRTM not available, please download" or similar.
+
+3) No efforts are planned to keep this repo backwards-compatible.
