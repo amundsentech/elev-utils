@@ -103,7 +103,6 @@ func (self *SrtmTile) getSquareSize() error {
 	// prepare file for observation
 	f, err := os.Stat(self.Path)
 	if err != nil {
-		fmt.Println("Can not find",self.Path,"?  Error: ",err.Error())
 		return err
 	}
 
@@ -113,12 +112,11 @@ func (self *SrtmTile) getSquareSize() error {
 	// get the tile size
 	if self.SquareSize <= 0 {
 		squareSizeFloat := math.Sqrt(float64(self.Size) / 2.0)
+		self.SquareSize = int(squareSizeFloat)
 
 		if squareSizeFloat != float64(self.SquareSize) || self.SquareSize <= 0 {
 			return errors.New(fmt.Sprintf("Invalid size for file %s: %d", self.Name, self.Size))
 		}
-
-		self.SquareSize = int(squareSizeFloat)
 	}
 
 	return nil
