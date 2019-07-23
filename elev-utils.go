@@ -101,7 +101,7 @@ func (self SrtmTile) getSquareSize() error {
 	// prepare file for observation
 	f, err := os.Stat(self.Path)
 	if err != nil {
-		fmt.Printf("Can not find",self.Path,"?  Error: ",err.Error())
+		fmt.Println("Can not find",self.Path,"?  Error: ",err.Error())
 		return err
 	}
 
