@@ -147,8 +147,6 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	// calculate the byte range
 	byteLocation := i*2
 
-	fmt.Printf("seeking for row, column from file
-
 	// open the file for reading
 	f, err := os.Open(self.Path)
 	if err != nil {
