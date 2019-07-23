@@ -90,9 +90,6 @@ func (self SrtmTile) getSrtmFileName(lat, lon float64) {
 	self.Name = fmt.Sprintf("%s%02d%s%03d.hgt", y, self.Latitude, x, self.Longitude)
 
 	self.Path = filepath.Join(self.Dir, self.Name)
-
-	fmt.Println(self.Name, self.Path)
-
 }
 
 
@@ -104,7 +101,8 @@ func (self SrtmTile) getSquareSize() error {
 	// prepare file for observation
 	f, err := os.Stat(self.Path)
 	if err != nil {
-	    return err
+		fmt.Printf("Can not find",self.Path,"?  Error: ",err.Error())
+		return err
 	}
 
 	// get the size
