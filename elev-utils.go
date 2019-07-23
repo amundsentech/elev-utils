@@ -62,7 +62,7 @@ func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
 
 
 // getElevationFromSrtm is a specific handler for elevation, if SRTM details are known
-func (self SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
+func (self *SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 	row, column := self.getRowAndColumn(lat, lon)
 
         elevation, err := self.getElevationFromRowAndColumn(row, column)
@@ -75,7 +75,7 @@ func (self SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 
 
 // SRTM compliance prescribes distinct filenames eg. S56W072.hgt 
-func (self SrtmTile) getSrtmFileName(lat, lon float64) {
+func (self *SrtmTile) getSrtmFileName(lat, lon float64) {
 	y := "S"
 	if lat >= 0 {
 		y = "N"
@@ -98,7 +98,7 @@ func (self SrtmTile) getSrtmFileName(lat, lon float64) {
 // the SquareSize determines the density of integers from the hgt file
 // Each 3-arc-second data tile has 1442401 integers representing a 1201×1201 grid
 // Each 1-arc-second data tile has 12967201 integers representing a 3601×3601 grid
-func (self SrtmTile) getSquareSize() error {
+func (self *SrtmTile) getSquareSize() error {
 
 	// prepare file for observation
 	f, err := os.Stat(self.Path)
@@ -127,7 +127,7 @@ func (self SrtmTile) getSquareSize() error {
 
 // getRowAndColumn calculates the lookup []byte in the grid
 // NOTE: row and column are int, therefore become FLOOR rounded values
-func (self SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
+func (self *SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 	row := int((float64(self.Latitude) + 1.0 - lat) * (float64(self.SquareSize - 1.0)))
 	column := int((lon - float64(self.Longitude)) * (float64(self.SquareSize - 1.0)))
 	return row, column
@@ -135,7 +135,7 @@ func (self SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 
 
 // find the elevation value associated with the row and column
-func (self SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, error) {
+func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, error) {
 	i := int64(row * self.SquareSize + column)
 
 	// calculate the byte range
