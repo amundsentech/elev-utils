@@ -29,7 +29,6 @@ func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
                 return math.NaN(), err
         }
 
-
 	elevation, err := srtm.getElevationFromSrtm(lat, lon)
 	if err != nil {
                 return elevation, err
@@ -56,7 +55,7 @@ func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
 		return srtm, err
 	}
 
-	return srtm, err
+	return srtm, nil
 }
 
 
@@ -159,6 +158,7 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	result := bytes[:response]
 
 	if len(result) < 2 {
+		err = errors.New("did not get meaningful result from strm file")
 		return math.NaN(), err
 	}
 
@@ -167,6 +167,7 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	final := int(result[0])*256 + int(result[1])
 
 	if final > 9000 {
+		err = errors.New("result elevation is non logical")
 		return math.NaN(), err
 	}
 
