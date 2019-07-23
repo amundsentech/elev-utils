@@ -144,8 +144,7 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	i := int64(row * self.SquareSize + column)
 
 	// calculate the byte range
-	byte1 := i*2
-	byte2 := i*2+1
+	byteLocation := i*2
 
 	// open the file for reading
 	f, err := os.Open(self.Path)
@@ -154,7 +153,7 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	}
 
 	// get the results from the byte location
-	_, _ = f.Seek(byte1, 0)
+	_, _ = f.Seek(byteLocation, 0)
 	bytes := make([]byte,2)
 	response, _ := io.ReadAtLeast(f,bytes,2)
 	result := bytes[:response]
