@@ -149,7 +149,7 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	// open the file for reading
 	f, err := os.Open(self.Path)
 	if err != nil {
-		return 0, err
+		return math.NaN(), err
 	}
 
 	// get the results from the byte location
@@ -157,6 +157,10 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	bytes := make([]byte,2)
 	response, _ := io.ReadAtLeast(f,bytes,2)
 	result := bytes[:response]
+
+	if len(result) < 2 {
+		return math.NaN(), err
+	}
 
 	// do some magic
 	// github.com/tkrajina/go-elevations/blob/master/geoelevations/srtm.go
