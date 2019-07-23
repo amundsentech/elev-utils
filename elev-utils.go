@@ -157,8 +157,8 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	response, _ := io.ReadAtLeast(f,bytes,2)
 	result := bytes[:response]
 
-	if len(result) < 2 {
-		err = errors.New("did not get meaningful result from strm file")
+	if len(result) != 2 {
+		err = errors.New("Result []byte from strm file is too small: $v",result)
 		return math.NaN(), err
 	}
 
