@@ -22,7 +22,7 @@ type SrtmTile struct {
 
 
 // getElevation is main handler for a single lat lon input
-func ElevationFromLatLong(demdir string, lat, lon float64) (float64, error) {
+func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
         srtm, err := getSrtm(demdir, lat, lon)
 	if err != nil {
                 return 0, err
