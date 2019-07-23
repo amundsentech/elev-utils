@@ -9,7 +9,7 @@ import	(
 )
 
 
-// SrtmTile holds file path and details of a single SRTM file
+// SrtmTile holds file path and details of a single SRTM file (...which are themselves 'Tiles')
 type SrtmTile struct {
 	Latitude	int
 	Longitude	int
@@ -21,8 +21,8 @@ type SrtmTile struct {
 }
 
 
-// getElevation is main handler for a lat lon input
-func getElevation(demdir string, lat, lon float64) (float64, error) {
+// getElevation is main handler for a single lat lon input
+func ElevationFromLatLong(demdir string, lat, lon float64) (float64, error) {
         srtm, err := getSrtm(demdir, lat, lon)
 	if err != nil {
                 return 0, err
@@ -38,7 +38,11 @@ func getElevation(demdir string, lat, lon float64) (float64, error) {
 }
 
 
-// getSrtm is a specific handler for filling in SRTM details
+// getElevationFromWKT is not implemented yet
+
+// getElevationFromBBOX is not implemented yet
+
+// getSrtm is a specific handler for filling in details of a single SRTM Tile
 func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
 	var srtm SrtmTile
 
@@ -55,7 +59,7 @@ func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
 }
 
 
-// getElevationFromSrtm is a specifci handler for levation if SRTM details are known
+// getElevationFromSrtm is a specific handler for elevation, if SRTM details are known
 func (self SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 	row, column := self.getRowAndColumn(lat, lon)
 
@@ -68,7 +72,7 @@ func (self SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 }
 
 
-// SRTM have distinct filenames eg. S56W072.hgt 
+// SRTM compliance prescribes distinct filenames eg. S56W072.hgt 
 func (self SrtmTile) getSrtmFileName(lat, lon float64) {
 	y := "S"
 	if lat >= 0 {
@@ -119,7 +123,8 @@ func (self SrtmTile) getSquareSize() error {
 }
 
 
-// assuming a grid of n x n, calculate the lookup value
+// getRowAndColumn calculates the lookup []byte in the grid
+// NOTE: row and column are int, therefore become FLOOR rounded values
 func (self SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 	row := int((float64(self.Latitude) + 1.0 - lat) * (float64(self.SquareSize - 1.0)))
 	column := int((lon - float64(self.Longitude)) * (float64(self.SquareSize - 1.0)))
