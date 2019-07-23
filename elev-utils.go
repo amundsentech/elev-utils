@@ -91,6 +91,8 @@ func (self SrtmTile) getSrtmFileName(lat, lon float64) {
 
 	self.Path = filepath.Join(self.Dir, self.Name)
 
+	log.Printf(self.Name, self.Path)
+
 }
 
 
