@@ -134,6 +134,8 @@ func (self *SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 		column = int((float64(self.Longitude) - math.Abs(lon)) * (float64(self.SquareSize - 1.0)))
 	}
 
+	fmt.Printf("seeking for row %v, column %v, lat %v, lon %v from file %s",row,column,lat,lon,self.Path)
+
 	return row, column
 }
 
@@ -144,6 +146,8 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 
 	// calculate the byte range
 	byteLocation := i*2
+
+	fmt.Printf("seeking for row, column from file
 
 	// open the file for reading
 	f, err := os.Open(self.Path)
