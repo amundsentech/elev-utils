@@ -129,7 +129,6 @@ func (self *SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 	if lat >= 0 {
 		row = int((float64(self.Latitude) + 1.0 - math.Abs(lat)) * (float64(self.SquareSize - 1.0)))
 	} else {
-		fmt.Printf("abs lat: %v, floor Lat : %v",math.Abs(lat),self.Latitude)
 		row = int((math.Abs(lat) - (float64(self.Latitude) - 1)) * (float64(self.SquareSize - 1.0)))
 	}
 
@@ -138,8 +137,6 @@ func (self *SrtmTile) getRowAndColumn(lat, lon float64) (int, int) {
 	} else {
 		column = int((float64(self.Longitude) - math.Abs(lon)) * (float64(self.SquareSize - 1.0)))
 	}
-
-	fmt.Printf("looking in %s for:\nrow %v, column %v,\nlat %v, lon %v\n",self.Path,row,column,lat,lon)
 
 	return row, column
 }
