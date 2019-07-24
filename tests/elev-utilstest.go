@@ -6,10 +6,17 @@ import (
 )
 
 const (
-	lat	= 45.638347
+	// NW Quadrant (Bozeman) z = ~1530m
+/*	lat	= 45.638347
 	lon	= -111.025257
+*/
+	// SE Quadrant, (Maputo Africa) z = ~280m
+	lat	= -25.9692
+	lon	= 32.5732
+
 	demdir	= "/data/dem/hdt/"
 )
+
 
 func main() {
 
