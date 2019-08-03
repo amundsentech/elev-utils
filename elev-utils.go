@@ -24,6 +24,11 @@ type SrtmTile struct {
 
 // getElevation is main handler for a single lat lon input
 func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
+	f, err := os.Stat(demdir)
+        if err != nil {
+                return math.NaN(), err
+        }
+
         srtm, err := getSrtm(demdir, lat, lon)
 	if err != nil {
                 return math.NaN(), err
