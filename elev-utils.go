@@ -7,8 +7,18 @@ import	(
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/planar"
 )
 
+const (
+	// select the spacing in decimal degrees of the x/y elevation points
+	// .0001 is approximately 10 meters
+	step =	.0001
+)
 
 // SrtmTile holds file path and details of a single SRTM file (...which are themselves 'Tiles')
 type SrtmTile struct {
@@ -21,8 +31,16 @@ type SrtmTile struct {
 	Size		int64
 }
 
+type Point struct {
+	X, Y float64
+}
 
-// getElevation is main handler for a single lat lon input
+type ElevPoint struct {
+	X, Y, Z float64
+}
+
+
+// ElevationFromLatLon is main handler for a single lat lon input
 func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
 	if _, err := os.Stat(demdir); err != nil {
                 return math.NaN(), err
@@ -41,10 +59,153 @@ func ElevationFromLatLon(demdir string, lat, lon float64) (float64, error) {
         return elevation, nil
 }
 
+// ElevationFromBBOX parses each LatLon, grabs ALL points within enclosed extent
+func ElevationFromBBOX (demdir string, bbox map[string]float64) ([][]float64, error) {
+	if _, err := os.Stat(demdir); err != nil {
+                return nil, err
+        }
 
-// getElevationFromWKT is not implemented yet
+	var x []float64
+	var y []float64
 
-// getElevationFromBBOX is not implemented yet
+	// get the min/max x, and min/max y values, to only the 5th digit
+	for k, v := range bbox {
+		v = math.Round(v*100000)/100000
+		if strings.Contains(strings.ToLower(k),"x") {
+			x = append(x,v)
+		} else {
+			y = append(y,v)
+		}
+	}
+
+	// sort ascending
+	sort.Float64s(x)
+	sort.Float64s(y)
+
+	// build the range of points covered by the bbox
+	if len(x) < 2 || len(y) < 2 {
+		return nil, fmt.Errorf("bbox is malformed, can not complete request, hint: %v",bbox)
+	}
+
+	// the third digit in this call is incrementing by .001 [approx 3 arc seconds] )
+	xrange := makeRange(x[0],x[1])
+	yrange := makeRange(y[0],y[1])
+
+	// combine all the possible x,y combinations
+	var ptcloud [][]float64
+	for _, lon := range xrange {
+		for _, lat := range yrange {
+			// look up the elevation value for each point
+
+			z, err := ElevationFromLatLon(demdir, lat, lon)
+
+			if err != nil {
+				fmt.Errorf("Not Fatal: [ElevationFromLatLon] in [ElevationFromBBOX] %v",err)
+			} else {
+				// apend the elevation to the point
+				ptcloud = append(ptcloud,[]float64{lon,lat,z})
+			}
+		}
+	}
+
+	return ptcloud, nil
+
+}
+
+
+// ElevationFromPolygon parses the polygon (GEOJSON), returns point cloud of containing 3D points
+func ElevationFromPolygon (demdir string, polygon [][][]float64) ([][]float64, error) {
+	// initiate the 2D point cloud early to capture all valid points
+	var polycloud [][]float64
+
+	// get bbox bounding extent of polygon
+	var bbox map[string]float64
+	bbox = make(map[string]float64)
+	bbox["lx"] = 0
+	bbox["rx"] = 0
+	bbox["ly"] = 0
+	bbox["uy"] = 0
+
+	for _, feature := range polygon {
+
+		for _, lonlat := range feature {
+
+			lon := lonlat[0]
+                        lat := lonlat[1]
+
+			// side note, make sure each poly point gets included in the elev lookup array
+			z, err := ElevationFromLatLon(demdir, lat, lon)
+			if err != nil {
+				return nil, fmt.Errorf("Fatal: [ElevationFromBbox] in [ElevationFromPolygon] --> %v",err)
+			} else {
+				polycloud = append(polycloud,[]float64{lon,lat,z})
+			}
+
+			// if the inbound X is outside of current extent, grow extent
+			if lon < bbox["lx"] || bbox["lx"] == 0 {
+				bbox["lx"] = lon
+			}
+			if lon > bbox["rx"] || bbox["rx"] == 0 {
+				bbox["rx"] = lon
+			}
+
+			// if the inbound Y is outside of current extent, grow extent
+			if lat < bbox["ly"] || bbox["ly"] == 0 {
+				bbox["ly"] = lat
+			}
+			if lat > bbox["uy"] || bbox["uy"] == 0 {
+				bbox["uy"] = lat
+			}
+		}
+
+	}
+
+	// get all elevations in bbox
+	ptcloud, err := ElevationFromBBOX(demdir, bbox)
+	if err != nil {
+		return nil, fmt.Errorf("Fatal: [ElevationFromBbox] in [ElevationFromPolygon] --> %v",err)
+	}
+
+	// retain bbox points only within polygon boundary
+	for _, pt := range ptcloud {
+		if isPointInsidePolygon(polygon, pt) == true {
+			polycloud = append(polycloud, pt)
+		}
+	}
+
+	return polycloud, nil
+
+}
+
+
+// isPointInsidePolygon uses paulmach's orb.planar package to make bool determination of location
+func isPointInsidePolygon(feature [][][]float64, floatpt []float64) bool {
+	// need test point to be of orb.Point type
+	var testpoint orb.Point
+        testpoint[0] = floatpt[0]
+        testpoint[1] = floatpt[1]
+
+	// need to parse each polygon as linestring (closed)
+	for _, linestring := range feature {
+
+		// orb.Planar requires an 'orb.Ring' struct
+		var ring orb.Ring
+
+		// add each of the features' points as orb.Point to orb.Linestring
+		for _, pt := range linestring {
+			pt := orb.Point{pt[0],pt[1]}
+			ring = append(ring,pt)
+		}
+
+		// test if the ring encircles the test point
+		if planar.RingContains(ring, testpoint) {
+	                return true
+	        }
+	}
+
+	return false
+}
+
 
 // getSrtm is a specific handler for filling in details of a single SRTM Tile
 func getSrtm(demdir string, lat, lon float64) (SrtmTile, error) {
@@ -183,4 +344,22 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	f.Close()
 
 	return float64(final), nil
+}
+
+// makeRange takes in a min and max value, and builds the range from there
+func makeRange(min float64, max float64) []float64 {
+
+	// build the range
+
+	truestep := int((max-min)/step) + 1
+
+	a := make([]float64, truestep)
+	for i := range a {
+		if i == 0 {
+			a[i] = min
+			continue
+		}
+		a[i] = a[i-1] + step
+	}
+	return a
 }
