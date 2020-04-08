@@ -9,6 +9,7 @@ import	(
 	"path/filepath"
 	"sort"
 	"strings"
+        "strconv"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/planar"
@@ -168,7 +169,7 @@ func ElevationFromPolygon (demdir string, polygon [][][]float64) ([][]float64, e
 
 	// retain bbox points only within polygon boundary
 	for _, pt := range ptcloud {
-		if isPointInsidePolygon(polygon, pt) == true {
+		if IsPointInsidePolygon(polygon, pt) == true {
 			polycloud = append(polycloud, pt)
 		}
 	}
@@ -178,8 +179,8 @@ func ElevationFromPolygon (demdir string, polygon [][][]float64) ([][]float64, e
 }
 
 
-// isPointInsidePolygon uses paulmach's orb.planar package to make bool determination of location
-func isPointInsidePolygon(feature [][][]float64, floatpt []float64) bool {
+// IsPointInsidePolygon uses paulmach's orb.planar package to make bool determination of location
+func IsPointInsidePolygon(feature [][][]float64, floatpt []float64) bool {
 	// need test point to be of orb.Point type
 	var testpoint orb.Point
         testpoint[0] = floatpt[0]
@@ -201,6 +202,18 @@ func isPointInsidePolygon(feature [][][]float64, floatpt []float64) bool {
 		if planar.RingContains(ring, testpoint) {
 	                return true
 	        }
+	}
+
+	return false
+}
+
+
+// IsPointInsideMultiPolygon recursively checks each inner polygon or hole
+func IsPointInsideMultiPolygon(feature [][][][]float64, floatpt []float64) bool {
+	for _, polygon := range feature {
+		if IsPointInsidePolygon(polygon, floatpt) == true {
+			return true
+		}
 	}
 
 	return false
@@ -362,4 +375,23 @@ func makeRange(min float64, max float64) []float64 {
 		a[i] = a[i-1] + step
 	}
 	return a
+}
+
+//NewBBOX takes an X and Y and creates a bbox
+func NewBBOX(x string, y string) map[string]float64 {
+	var bbox map[string]float64
+        bbox = make(map[string]float64)
+        bbox["lx"] = Str2Fixed(x) - .015
+        bbox["rx"] = Str2Fixed(x) + .015
+        bbox["ly"] = Str2Fixed(y) - .015
+        bbox["uy"] = Str2Fixed(y) + .015
+	return bbox
+}
+
+// Str2Fixed is a little helper function taking a string value and returns a float64
+func Str2Fixed(num string) float64 {
+        val, _ := strconv.ParseFloat(num, 64)
+        j := strconv.FormatFloat(val, 'f', 2, 64)
+        k, _ := strconv.ParseFloat(j, 64)
+        return k
 }
