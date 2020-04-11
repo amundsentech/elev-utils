@@ -18,7 +18,7 @@ import	(
 const (
 	// select the spacing in decimal degrees of the x/y elevation points
 	// .0001 is approximately 10 meters
-	step =	.0001
+	step =	.0002
 )
 
 // SrtmTile holds file path and details of a single SRTM file (...which are themselves 'Tiles')
