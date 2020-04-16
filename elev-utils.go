@@ -16,9 +16,9 @@ import	(
 )
 
 const (
-	// select the spacing in decimal degrees of the x/y elevation points
-	// .0001 is approximately 10 meters
-	step =	.0002
+	// select the spacing in lat/lon decimal degrees of the x/y elevation points
+	step =	.0003 //about 20 meters at 45 deg north)
+	width = .02 //about 3km using width as diameter
 )
 
 // SrtmTile holds file path and details of a single SRTM file (...which are themselves 'Tiles')
@@ -349,9 +349,9 @@ func (self *SrtmTile) getElevationFromRowAndColumn(row, column int) (float64, er
 	// github.com/tkrajina/go-elevations/blob/master/geoelevations/srtm.go
 	final := int(result[0])*256 + int(result[1])
 
-	if final > 9000 {
+	if final > 11000 {
 		err = errors.New("result elevation is non logical")
-		return math.NaN(), err
+		return math.NaN(), fmt.Errorf("result is not logical, encountered float64 value of: %v",float64(final))
 	}
 
 	f.Close()
@@ -381,10 +381,10 @@ func makeRange(min float64, max float64) []float64 {
 func NewBBOX(x string, y string) map[string]float64 {
 	var bbox map[string]float64
         bbox = make(map[string]float64)
-        bbox["lx"] = Str2Fixed(x) - .015
-        bbox["rx"] = Str2Fixed(x) + .015
-        bbox["ly"] = Str2Fixed(y) - .015
-        bbox["uy"] = Str2Fixed(y) + .015
+        bbox["lx"] = Str2Fixed(x) - width
+        bbox["rx"] = Str2Fixed(x) + width
+        bbox["ly"] = Str2Fixed(y) - width
+        bbox["uy"] = Str2Fixed(y) + width
 	return bbox
 }
 
