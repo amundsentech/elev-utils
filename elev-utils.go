@@ -18,7 +18,7 @@ import	(
 const (
 	// select the spacing in lat/lon decimal degrees of the x/y elevation points
 	step =	.0003 //about 20 meters at 45 deg north)
-	width = .02 //about 3km using width as diameter
+	width = .01 //about 3km using width as diameter
 )
 
 // SrtmTile holds file path and details of a single SRTM file (...which are themselves 'Tiles')
@@ -243,7 +243,7 @@ func (self *SrtmTile) getElevationFromSrtm(lat, lon float64) (float64, error) {
 
         elevation, err := self.getElevationFromRowAndColumn(row, column)
         if err != nil {
-                return elevation, err
+                return elevation, fmt.Errorf("elevation is %v for lat long of %v, %v",elevation,lat,lon)
         }
 
         return elevation, nil
