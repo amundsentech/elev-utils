@@ -13,6 +13,7 @@ import	(
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/planar"
+	geo "github.com/paulmach/go.geo"
 )
 
 const (
@@ -129,10 +130,10 @@ func ElevationFromPolygon (demdir string, polygon [][][]float64) ([][]float64, e
 
 	for _, feature := range polygon {
 
-		for _, lonlat := range feature {
+		for _, coord := range feature {
 
-			lon := lonlat[0]
-                        lat := lonlat[1]
+			// make sure projection is 4326!
+			lon,lat := To4326(coord[0],coord[1])
 
 			// side note, make sure each poly point gets included in the elev lookup array
 			z, err := ElevationFromLatLon(demdir, lat, lon)
@@ -394,4 +395,16 @@ func Str2Fixed(num string) float64 {
         j := strconv.FormatFloat(val, 'f', 2, 64)
         k, _ := strconv.ParseFloat(j, 64)
         return k
+}
+
+// To4326 converts coordinates to EPSG:4326 projection
+func To4326(x float64, y float64) (float64, float64) {
+        if x > 180 || x < -180 || y > 180 || y < -180 {
+                mercPoint := geo.NewPoint(x, y)
+                geo.Mercator.Inverse(mercPoint)
+                x = math.Round(mercPoint[0]*10000) / 10000
+                y = math.Round(mercPoint[1]*10000) / 10000
+        }
+
+        return x, y
 }
