@@ -135,9 +135,7 @@ func ElevationFromPolygon (demdir string, polygon [][][]float64) ([][]float64, e
 			// make sure projection is 4326!
 			lon,lat := To4326(coord[0],coord[1])
 
-			fmt.Printf("lon %v, lat %v",lon,lat)
-
-			// side note, make sure each poly point gets included in the elev lookup array
+			// also, make sure each poly point gets included in the elev lookup array
 			z, err := ElevationFromLatLon(demdir, lat, lon)
 			if err != nil {
 				return nil, fmt.Errorf("Fatal: [ElevationFromBbox] in [ElevationFromPolygon] --> %v",err)
