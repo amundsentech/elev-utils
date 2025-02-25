@@ -37,7 +37,7 @@ var (
 	srtmTiles = make(map[string]srtmTile)
 )
 
-// SrtmTile holds file path and details of a single SRTM request
+// srtmRequest holds details of a single SRTM elevation request
 type srtmRequest struct {
 	Latitude   int
 	Longitude  int
@@ -59,6 +59,7 @@ type srtmTile struct {
 }
 
 // create Google Storage client (cli) and bucket (bkt)
+// TBD review if global scope necessary / duplicate
 func init() {
 	ctx := context.Background()
 	cli, err := storage.NewClient(ctx)
